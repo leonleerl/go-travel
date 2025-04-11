@@ -8,8 +8,19 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage,Card, CardCont
 import { z } from 'zod';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { FormProvider, useForm } from "react-hook-form"
-import ReactMarkdown from 'react-markdown';
 import { Flex, Spinner } from '@radix-ui/themes';
+import { TypewriterText } from '@/components';
+
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
 
 const Map = dynamic(() => import('../components/Map'), { ssr: false });
 
@@ -86,7 +97,7 @@ export default function Home() {
                 key={idx}
                 className="rounded-xl px-4 py-2 max-w-[90%] text-sm whitespace-pre-wrap bg-blue-100 text-left my-2"
               >
-                <ReactMarkdown>{msg}</ReactMarkdown>
+                <TypewriterText text={msg} speed={30}/>
               </div>
             ))}
           </ScrollArea>
@@ -172,6 +183,22 @@ export default function Home() {
                     </Flex>
                 </form>
               </FormProvider>
+              <Drawer>
+            <DrawerTrigger>Open Drawer</DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>Are you absolutely sure?</DrawerTitle>
+                <DrawerDescription>This action cannot be undone.</DrawerDescription>
+              </DrawerHeader>
+              <DrawerFooter>
+                <Button>Submit</Button>
+                <DrawerClose>
+                  <Button variant="outline">Cancel</Button>
+                </DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
+
             </CardContent>
           </Card>
 
