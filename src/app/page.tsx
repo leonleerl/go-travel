@@ -8,21 +8,24 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage,Card, CardCont
 import { z } from 'zod';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { FormProvider, useForm } from "react-hook-form"
+import ReactMarkdown from 'react-markdown';
+import { Flex, Spinner } from '@radix-ui/themes';
 
 const Map = dynamic(() => import('../components/Map'), { ssr: false });
 
 const formSchema = z.object({
-  destination: z.string().min(1,{message: '目的地不能为空'}).max(20,{message: '目的地不能超过20个字符'}),
-  days: z.string().min(1,{message: '旅行天数不能为空'}),
-  budget: z.string().min(1,{message: '预算不能为空'}),
-  interests: z.string().min(1,{message: '兴趣不能为空'}).max(50,{message: '兴趣不能超过50个字符'}),
+  destination: z.string().min(1,{message: 'Cannot be empty'}).max(20,{message: 'Cannot be more than 20 characters'}),
+  days: z.string().min(1,{message: 'Cannot be empty'}),
+  budget: z.string().min(1,{message: 'Cannot be empty'}),
+  interests: z.string().min(1,{message: 'Cannot be empty'}).max(50,{message: 'Interests cannot be more than 50 characters'}),
 });
 
 
 export default function Home() {
   const [messages, setMessages] = useState<string[]>([
-    '你好！我是你的AI旅游助手，请在地图上点击地点，或输入想去的城市，我来为你生成旅行建议！',
+    'Hi, I am your AI travel assistant🤖. You can ask me anything about travel in your language! Please click on a location on the map, or enter a city you want to visit, and I will generate travel suggestions for you! ',
   ]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -34,13 +37,29 @@ export default function Home() {
     },
   })
   
-  const handleSend = (data: z.infer<typeof formSchema>) => {
-    // if (!input.trim()) return;
-    // setMessages((prev) => [...prev, input]);
-    // setInput('');
-    console.log(data);
-    // TODO: 你可以在这里调用 OpenAI API
+  const handleSend = async (prompt: z.infer<typeof formSchema>) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/agent', {
+        method: 'POST',
+        body: JSON.stringify(prompt),
+      });
+      const data = await response.json();
+      console.log(data);
+      setMessages((prev) => [...prev, data.result]);
+    } catch (error) { 
+      console.error(error);
+      setMessages((prev) => [...prev, 'An error occurred. Please try again later.']);
+    } finally{
+      setIsLoading(false);
+    }
   };
+  
+  const deleteContent = () => {
+    setMessages([
+      'Hi, I am your AI travel assistant🤖. You can ask me anything about travel in your language! Please click on a location on the map, or enter a city you want to visit, and I will generate travel suggestions for you! ',
+    ]);
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -59,19 +78,15 @@ export default function Home() {
         </div>
 
         {/* 聊天助手 */}
-        <div className="w-full md:w-[400px] p-4 border border-gray-500 bg-muted flex flex-col m-1 rounded-2xl">
+        <div className="w-full md:w-[400px] p-4 border border-gray-500 bg-muted flex flex-col m-1 rounded-2xl overflow-y-auto">
           {/* 聊天内容区 */}
-          <ScrollArea className="flex-1 pr-2 space-y-3 bg-amber-100">
+          <ScrollArea className="flex-1 bg-gray-200 overflow-y-auto mb-4 rounded-2xl" style={{ maxHeight: '500px' }}>
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`rounded-xl px-4 py-2 max-w-[90%] text-sm whitespace-pre-wrap ${
-                  idx % 2 === 0
-                    ? 'bg-blue-100 text-left'
-                    : 'bg-green-100 text-right self-end'
-                }`}
+                className="rounded-xl px-4 py-2 max-w-[90%] text-sm whitespace-pre-wrap bg-blue-100 text-left my-2"
               >
-                {msg}
+                <ReactMarkdown>{msg}</ReactMarkdown>
               </div>
             ))}
           </ScrollArea>
@@ -86,11 +101,11 @@ export default function Home() {
                     render={({ field }) => (
                       <FormItem>
                         <div className='flex gap-2'>
-                          <FormLabel>目的地</FormLabel>
+                          <FormLabel>Destination</FormLabel>
                           <FormMessage/>
                         </div>
                         <FormControl>
-                          <Input placeholder='输入目的地...' {...field} />
+                          <Input placeholder='For example: London, Tokyo, Sydney, etc.' {...field} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -102,12 +117,12 @@ export default function Home() {
                     render={({ field }) => (
                       <FormItem>
                         <div className='flex gap-2'>
-                          <FormLabel>旅行天数</FormLabel>
+                          <FormLabel>Days</FormLabel>
                           <FormMessage/>
                         </div>
                         <FormControl>
                           <Input 
-                            placeholder="输入天数..." 
+                            placeholder="For example: 3 days, 5 days, etc." 
                             {...field}
                           />
                         </FormControl>
@@ -121,12 +136,12 @@ export default function Home() {
                     render={({ field }) => (
                       <FormItem>
                         <div className='flex gap-2'>
-                          <FormLabel>预算（例如 3000人民币）</FormLabel>
+                          <FormLabel>Budget</FormLabel>
                           <FormMessage/>
                         </div>
                         <FormControl>
                           <Input 
-                            placeholder="输入预算..." 
+                            placeholder="For example: 3000 CNY, 500 USD, etc." 
                             {...field}
                           />
                         </FormControl>
@@ -140,17 +155,21 @@ export default function Home() {
                     render={({ field }) => (
                       <FormItem>
                         <div className='flex gap-2'>
-                          <FormLabel>兴趣（历史、自然等）</FormLabel>
+                          <FormLabel>Interests</FormLabel>
                           <FormMessage/>
                         </div>
                         <FormControl>
-                          <Input placeholder="输入兴趣..." {...field} />
+                          <Input placeholder="For example: history, nature, etc." {...field} />
                         </FormControl>
                       </FormItem>
                     )}
                   />
-                  
-                  <Button type="submit" className="w-full">发送</Button>
+                  <Flex gap={'2'}>
+                    <Button type="submit" className='w-2/3' disabled={isLoading}>
+                      {isLoading ? <Flex align={'center'}><div>AI正在思考...</div><Spinner size={"1"}/></Flex> : '发送'}
+                    </Button>
+                    <Button type='button' onClick={deleteContent} variant={'destructive'} className='w-1/3'>清除AI对话</Button>
+                    </Flex>
                 </form>
               </FormProvider>
             </CardContent>
