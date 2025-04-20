@@ -1,5 +1,7 @@
+"use client";
 import "./globals.css";
 import { Theme } from "@radix-ui/themes";
+import { SessionProvider } from "next-auth/react";
 
 export default function RootLayout({
   children,
@@ -10,7 +12,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Theme>
-          {children}
+          <SessionProvider>
+            {children}
+          </SessionProvider>
         </Theme>
       </body>
     </html>

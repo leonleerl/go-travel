@@ -21,7 +21,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
-
+import { UserMenu } from '@/components/auth';
 const Map = dynamic(() => import('../components/Map'), { ssr: false });
 
 const formSchema = z.object({
@@ -76,7 +76,10 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       {/* 顶部导航 */}
       <header className="bg-primary text-white p-4 text-xl font-semibold shadow">
-        🌏 AI旅游助手
+        <div className='flex justify-between'>
+          <div className='text-2xl font-semibold'>🌏AI旅游助手</div>
+          <UserMenu/>
+        </div>
       </header>
 
       {/* 主区域：地图 + 聊天 */}
@@ -100,7 +103,9 @@ export default function Home() {
                 <TypewriterText text={msg} speed={30}/>
               </div>
             ))}
+
           </ScrollArea>
+
           
           <Card>
             <CardContent>
